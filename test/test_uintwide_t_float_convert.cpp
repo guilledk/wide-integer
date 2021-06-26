@@ -14,6 +14,13 @@
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+
+#if defined(__clang__) && !defined(__APPLE__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #endif
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -180,7 +187,7 @@ bool math::wide_integer::test_uintwide_t_float_convert()
 
   bool result_is_ok = true;
 
-  for(std::size_t i = 0U; i < 0x40000U; ++i)
+  for(std::size_t i = 0U; i < 0x80000U; ++i)
   {
     const float f = get_random_float<float, -1, 27>();
 
@@ -193,7 +200,7 @@ bool math::wide_integer::test_uintwide_t_float_convert()
     result_is_ok &= (str_boost_signed == str_local_signed);
   }
 
-  for(std::size_t i = 0U; i < 0x40000U; ++i)
+  for(std::size_t i = 0U; i < 0x80000U; ++i)
   {
     const double d = get_random_float<double, -1, 75>();
 
@@ -261,6 +268,11 @@ bool math::wide_integer::test_uintwide_t_float_convert()
   return result_is_ok;
 }
 
+#if defined(__clang__) && !defined(__APPLE__)
+#pragma GCC diagnostic pop
+#endif
+
 #if defined(__GNUC__)
+#pragma GCC diagnostic pop
 #pragma GCC diagnostic pop
 #endif
