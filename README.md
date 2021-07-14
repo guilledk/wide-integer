@@ -32,7 +32,7 @@ as shown in the [examples](./examples).
 
 ## Implementation goals
 
-  - Signed and unsigned versions of `uintwide_t` should behave as closely as possible as signed and unsigned versions of built-in `int`.
+  - Signed and unsigned versions of `uintwide_t` should behave as closely as possible to the behaviors of signed and unsigned versions of built-in `int`.
   - Relatively wide precision range from 24, 32, 64 bits up to tens of thousands of bits.
   - Moderately good efficiency over the entire wide precision range.
   - Clean header-only C++11 design.
@@ -84,27 +84,24 @@ class uintwide_t;
 ```
 
 `uintwide_t` also has a third optional template paramter that
-can be used to set the _allocator_ _type_ used for internal storage of the
-big integer type. This template parameter can reduce stack consumption
-and can be especially useful for high digit counts.
-If the `AllocatorType` template parameter is `void`, allocation
-is performed on the stack using an `array`-like, statically-sized
-internal storage representation.
+is used to set the _allocator_ _type_ employed for internal storage of the
+big integer's data. The default allocator type is `void`
+and `uintwide_t` uses stack allocation with an `std::array`-like internal representation.
+Setting the allocator type to an actual allocator such as,
+for instance, `std::allocator<limb_type>` activates allocator-based
+internal storage for `uintwide_t`.
+Using allocator-based storage reduces stack consumption and
+can be especially beneficial for higher digit counts.
+For low digit counts, the allocator type can
+simply be left blank (thus defaulting to `void`)
+or explicitly be set to `void` and stack allocation
+will be used in either case.
 
-If left blank, the default `AllocatorType` is `void`
-and stack storage is used.
-
-The standard allocator (i.e., `std::allocator<void>`)
-or a custom allocator type can be used if using stack memory
-is insufficient or not well-suited to the application.
-Consider a custom allocator such as, let's say,
-`custom_allocator_type`. Setting the `AllocatorType` template parameter
-to `custom_allocator_type<void>` or optionally
-`custom_allocator_type<LimbType>` uses this custom allocator
-for internal storage. An allocator supplied as
-`AllocatorType` template parameter itself having any
-granularity other than `LimbType` (such as `void`, etc.)
-will internally use `allocator_traits` to `rebind_alloc` to `LimbType`.
+If an allocator is supplied with any granularity other than `limb_type`
+(in other words `LimbType`) such as `std::allocator<void>`, `custom_allocator_type<char>`, etc.,
+then the `uintwide_t` class will internally _rebind_ the allocator
+to the granularity and `unsigned`-ness of `limb_type` using `rebind_alloc`
+from `std::allocator_traits`.
 
 The fourth template parameter `IsSigned` can be set to `true`
 to activate a signed integer type. If left blank,
@@ -145,9 +142,12 @@ on how to use wide-integer.
 The recent status of building and executing the tests and examples
 in Continuous Integration (CI) is always shown in the Build Status banner.
 
-Simply using the [`uintwide-t.h` header](./math/wide_integer/uintwide_t.h)
-can be accomplished by identifying the header within
-its directory, including the header path and header in the normal C++ way.
+When working in your own project with wide-integer,
+using the [`uintwide_t.h` header](./math/wide_integer/uintwide_t.h)
+is straightforward. Identify the header within
+its directory. Include this header path to the compiler's set
+of include paths or in your project.
+Then simply `#include <uintwide_t.h>` the normal C++ way.
 
 It is also possible, if desired, to build and execute
 the tests and examples using various different OS/compiler
@@ -541,9 +541,9 @@ constexpr bool result_is_ok = (   (c == "0xE491A360C57EB4306C61F9A04F7F7D99BE367
 static_assert(result_is_ok == true, "Error: example is not OK!");
 ```
 
-`constexpr`-_ness_ of `uintwide_t` has been checked on GCC 10, clang 10
+`constexpr`-_ness_ of `uintwide_t` has been checked on GCC 10, GCC 11, clang 10
 (with `-std=c++20`) and VC 14.2 (with `/std:c++latest`),
-also for various embedded compilers such as `avr-gcc` 10,
+also for various embedded compilers such as `avr-gcc` 10 and 11,
 `arm-non-eabi-gcc` 10, and more. In addition,
 less modern compiler versions in addition to some other compilers
 having standards such as C++14, 17, 2a have also been checked
@@ -609,4 +609,4 @@ negative arguments in number theoretical functions.
   - GCD of `a`, `b` signed converts both arguments to positive and negates the result for `a`, `b` having opposite signs.
   - Miller-Rabin primality testing treats negative inetegers as positive when testing for prime, thus extending the set of primes <img src="https://render.githubusercontent.com/render/math?math=p\,\in\,\mathbb{Z}">.
   - MSB/LSB (most/least significant bit) do not differentiate between positive or negative argument such that MSB of a negative integer will be the highest bit of the corresponding unsigned type.
-  - Printing both positive-valued and negative-valued signed integers in hexadecimal format is supported. When printing negative-valued, signed  `uintwide_t` integers hexadecimal format, the sign bit and all other bits are treated as if the integer were unsigned. The negative sign is not explicitly shown when using hexadecimal format, even if the underlying integer is signed and negative-valued. A potential positive sign, however, will be shown for positive-valued signed integers in hexadecimal form in the presence of `std::showpos`.
+  - Printing both positive-valued and negative-valued signed integers in hexadecimal format is supported. When printing negative-valued, signed  `uintwide_t` in hexadecimal format, the sign bit and all other bits are treated as if the integer were unsigned. The negative sign is not explicitly shown when using hexadecimal format, even if the underlying integer is signed and negative-valued. A potential positive sign, however, will be shown for positive-valued signed integers in hexadecimal form in the presence of `std::showpos`.
